@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>天机神算</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* 引入中式书法字体 和 衬线体 */
+      @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+      
+      body {
+        background-color: #fcfcf7; /* 宣纸白 */
+        color: #4c1d95; /* 深紫墨色 */
+        font-family: 'Noto Serif SC', serif;
+        background-image: 
+          radial-gradient(#e5e7eb 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+      
+      h1, h2, h3, h4, h5, h6, .brush-font {
+        font-family: 'Ma Shan Zheng', cursive;
+      }
+
+      /* Custom Scrollbar - Purple Theme */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f3f4f6; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #a855f7; 
+        border-radius: 3px;
+      }
+
+      /* Ink Spread Effect Class */
+      .ink-box {
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 
+          0 0 0 1px #d8b4fe,
+          0 10px 15px -3px rgba(88, 28, 135, 0.1), 
+          0 4px 6px -2px rgba(88, 28, 135, 0.05);
+        border: 2px solid #581c87;
+        position: relative;
+      }
+      
+      /* Traditional Corner Decorations */
+      .corner-decoration::before, .corner-decoration::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #581c87;
+        transition: all 0.3s ease;
+      }
+      .corner-decoration::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+      .corner-decoration::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+      .animate-ink-flow {
+        animation: inkFlow 1s ease-out forwards;
+      }
+
+      @keyframes inkFlow {
+        0% { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lunar-javascript": "https://esm.sh/lunar-javascript@1.6.12"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
