@@ -1,16 +1,3 @@
-export enum FortuneCategory {
-  WEALTH = '财运',
-  LOVE = '姻缘',
-  CAREER = '事业',
-  HEALTH = '健康',
-  TABOO = '宜忌',
-}
-
-export enum PredictionScope {
-  DAY = '日运',
-  MONTH = '月运',
-  YEAR = '流年',
-}
 
 export const CHINESE_HOURS = [
   '子 (23:00-01:00)', '丑 (01:00-03:00)', '寅 (03:00-05:00)', '卯 (05:00-07:00)', 
@@ -22,9 +9,7 @@ export interface UserData {
   userName: string;
   birthDate: string; // YYYY-MM-DD
   birthHour: string; // "子", "丑" etc.
-  scope: PredictionScope;
-  targetDate: string; // YYYY-MM-DD (Used for Day/Month/Year logic)
-  categories: FortuneCategory[];
+  request: string; // The specific goal (e.g., "Moving house", "Wedding")
 }
 
 // Data extracted from lunar-javascript to pass to AI
@@ -37,40 +22,32 @@ export interface LunarAnalysisData {
     animal: string; // Zodiac
     dayElement: string; // Day Master (日主五行)
   };
-  targetInfo: {
-    lunarDateStr: string;
-    ganZhi: string; // 干支
-    yi: string[]; // 宜
-    ji: string[]; // 忌
-    chong: string; // 冲煞
-    wuxing: string; // 纳音五行
-    shenSha: string[]; // 吉神/凶煞
-  };
-  conflictStatus: string; // Pre-calculated conflict description
+}
+
+export interface RecommendedDate {
+  date: string; // YYYY-MM-DD
+  weekDay: string; // e.g. 周五
+  lunarDate: string; // e.g. 四月初五
+  reason: string; // The "Convincing Logic"
+  energyScore: number; // 80-100
+  tags: string[]; // e.g. ["天德合", "月德"]
 }
 
 export interface FortuneResult {
-  title: string; // e.g., "乙巳年·运势总批"
-  summary: string; // 判词
-  scores: {
-    category: string;
-    score: number; // 0-100
-    comment: string;
-  }[];
-  luckyGuide: {
-    color: string;
-    direction: string;
-    number: string;
+  title: string; 
+  summary: string; // Overall analysis of the user's request vs their BaZi
+  dates: {
+    immediate: RecommendedDate[]; // Within 1 week (1 date)
+    shortTerm: RecommendedDate[]; // 1 week - 1 month (2 dates)
+    longTerm: RecommendedDate[];  // 1 month - 6 months (2 dates)
   };
-  advice: string; // 道长寄语
+  advice: string; // Preparation advice
 }
 
 export interface GasPayload {
   timestamp: string;
   userName: string;
   birthDate: string;
-  scope: string;
-  targetDate: string;
-  categories: string[];
+  request: string;
   resultSummary: string;
 }

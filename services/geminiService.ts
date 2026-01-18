@@ -4,42 +4,41 @@ import { analyzeDestiny } from '../utils/lunarHelper';
 
 export const generateFortune = async (userData: UserData): Promise<FortuneResult> => {
   if (!process.env.API_KEY) {
-    throw new Error("API Key not found. Please ensure process.env.API_KEY is available.");
+    throw new Error("API Key not found.");
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-  // 1. Get Hard Data from Lunar Algorithm
   const lunarData = analyzeDestiny(userData);
+  const today = new Date().toISOString().split('T')[0];
 
-  // 2. Construct Prompt
   const prompt = `
-    Role: You are a highly respected Taoist Master (道长) proficient in BaZi (Four Pillars) and Zi Wei Dou Shu.
-    Task: Interpret the destiny for the 'Benefactor' (User) based on the provided astrological data.
-    Tone: Mystical, archaic Chinese simplified (半文半白), authoritative yet benevolent. Use terms like "贫道", "施主", "此乃", "天机".
-
-    [User Data]
-    Name: ${userData.userName}
-    BaZi (Year/Month/Day/Time): ${lunarData.userBaZi.year} / ${lunarData.userBaZi.month} / ${lunarData.userBaZi.day} / ${lunarData.userBaZi.time}
-    Zodiac: ${lunarData.userBaZi.animal}
-    Day Master Element: ${lunarData.userBaZi.dayElement}
-
-    [Target Prediction Scope: ${userData.scope}]
-    Target Date info: ${JSON.stringify(lunarData.targetInfo)}
-    Calculated Conflict: ${lunarData.conflictStatus}
-    Focus Categories: ${userData.categories.join(', ')}
-
-    Instructions:
-    1. Analyze the interaction between the User's Day Master and the Target's Element (WuXing).
-    2. Consider the 'Yi' (Dos) and 'Ji' (Don'ts) provided.
-    3. Generate a JSON response. 
+    Role: You are an expert Feng Shui and BaZi Date Selection Master (择日师).
+    User Name: ${userData.userName}
+    User BaZi: ${lunarData.userBaZi.year} Year / ${lunarData.userBaZi.month} Month / ${lunarData.userBaZi.day} Day / ${lunarData.userBaZi.time} Hour.
+    User Zodiac: ${lunarData.userBaZi.animal}
+    User Day Master: ${lunarData.userBaZi.dayElement}
     
-    Response Structure:
-    - title: A poetic title for the prediction (e.g. "甲辰年·龙腾四海之象").
-    - summary: A 2-sentence verdict in cryptic but inspiring style.
-    - scores: An array for the user's selected categories. Give a score (0-100) and a short Daoist comment.
-    - luckyGuide: Specific advice on color, direction (e.g. South-East), and a number (1-9).
-    - advice: A longer paragraph of guidance, offering a philosophical solution to any bad omens.
+    User's Request (Goal): "${userData.request}"
+    Current Date: ${today}
+
+    TASK:
+    Find exactly 5 auspicious dates for the User's Goal starting from tomorrow (${today}).
+    You MUST strictly follow this distribution:
+    1. [Immediate] Find 1 date within the next 7 days.
+    2. [Short-term] Find 2 dates between 7 days from now and 30 days from now.
+    3. [Long-term] Find 2 dates between 1 month from now and 6 months from now.
+
+    LOGIC REQUIREMENTS FOR SELECTION:
+    - The date must be suitable for the requested activity (check 'Yi' 宜).
+    - The date should NOT clash (Chong 冲) with the user's Zodiac (${lunarData.userBaZi.animal}).
+    - Ideally, look for 'San He' (Three Harmony) or 'Liu He' (Six Harmony) days with the user.
+    - Mention specific Shen Sha (Gods/Sha) if applicable (e.g. 天德, 月德, 天医).
+    
+    TONE:
+    - Use clear, persuasive, colloquial Chinese (通俗易懂).
+    - Explain *why* this date is chosen (The "Reason" field).
+    
+    OUTPUT JSON FORMAT:
   `;
 
   try {
@@ -51,40 +50,69 @@ export const generateFortune = async (userData: UserData): Promise<FortuneResult
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING },
-            summary: { type: Type.STRING },
-            scores: { 
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  category: { type: Type.STRING },
-                  score: { type: Type.NUMBER },
-                  comment: { type: Type.STRING }
-                }
-              }
-            },
-            luckyGuide: {
+            title: { type: Type.STRING, description: "E.g. '张先生搬家择吉方案'" },
+            summary: { type: Type.STRING, description: "A brief analysis of the user's BaZi suitability for this event." },
+            advice: { type: Type.STRING, description: "Preparation advice for the event." },
+            dates: {
               type: Type.OBJECT,
               properties: {
-                color: { type: Type.STRING },
-                direction: { type: Type.STRING },
-                number: { type: Type.STRING }
-              }
-            },
-            advice: { type: Type.STRING },
+                immediate: {
+                  type: Type.ARRAY,
+                  items: {
+                     type: Type.OBJECT,
+                     properties: {
+                        date: { type: Type.STRING, description: "YYYY-MM-DD" },
+                        weekDay: { type: Type.STRING, description: "e.g. 周五" },
+                        lunarDate: { type: Type.STRING, description: "e.g. 四月初八" },
+                        reason: { type: Type.STRING, description: "Convincing reason why this date is good for the user." },
+                        energyScore: { type: Type.NUMBER },
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+                     }
+                  }
+                },
+                shortTerm: {
+                  type: Type.ARRAY,
+                  items: {
+                     type: Type.OBJECT,
+                     properties: {
+                        date: { type: Type.STRING },
+                        weekDay: { type: Type.STRING },
+                        lunarDate: { type: Type.STRING },
+                        reason: { type: Type.STRING },
+                        energyScore: { type: Type.NUMBER },
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+                     }
+                  }
+                },
+                longTerm: {
+                  type: Type.ARRAY,
+                  items: {
+                     type: Type.OBJECT,
+                     properties: {
+                        date: { type: Type.STRING },
+                        weekDay: { type: Type.STRING },
+                        lunarDate: { type: Type.STRING },
+                        reason: { type: Type.STRING },
+                        energyScore: { type: Type.NUMBER },
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+                     }
+                  }
+                }
+              },
+              required: ['immediate', 'shortTerm', 'longTerm']
+            }
           },
-          required: ['title', 'summary', 'scores', 'luckyGuide', 'advice']
+          required: ['title', 'summary', 'dates', 'advice']
         }
       }
     });
 
     const text = response.text;
-    if (!text) throw new Error("The heavens are cloudy (No response).");
+    if (!text) throw new Error("No response.");
     return JSON.parse(text) as FortuneResult;
 
   } catch (error) {
     console.error("Gemini Error:", error);
-    throw new Error("Connection to the Tao interrupted.");
+    throw new Error("Unable to calculate dates at this moment.");
   }
 };

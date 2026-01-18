@@ -11,7 +11,7 @@ export const logToGoogleSheet = async (url: string, payload: GasPayload): Promis
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain;charset=utf-8', // GAS prefers text/plain to avoid preflight issues in some cases
+        'Content-Type': 'text/plain;charset=utf-8', 
       },
       body: JSON.stringify(payload),
     });
@@ -20,7 +20,6 @@ export const logToGoogleSheet = async (url: string, payload: GasPayload): Promis
     return result.status === 'success';
   } catch (error) {
     console.warn("Failed to log to Google Sheet:", error);
-    // We don't want to break the app flow if logging fails
     return false;
   }
 };

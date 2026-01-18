@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Icons } from './constants';
-import { UserData, FortuneResult, PredictionScope } from './types';
+import { UserData, FortuneResult } from './types';
 import FortuneForm from './components/FortuneForm';
 import FortuneResultView from './components/FortuneResultView';
 import SettingsModal from './components/SettingsModal';
+import PaymentModal from './components/PaymentModal';
 import { generateFortune } from './services/geminiService';
 import { logToGoogleSheet } from './services/loggingService';
 
@@ -12,14 +13,15 @@ const App: React.FC = () => {
     userName: '',
     birthDate: '',
     birthHour: '',
-    targetDate: new Date().toISOString().split('T')[0],
-    scope: PredictionScope.DAY,
-    categories: [],
+    request: '', // Changed from targetDate/Scope to generic request
   });
 
   const [result, setResult] = useState<FortuneResult | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Modal States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   
   const [gasUrl, setGasUrl] = useState(() => localStorage.getItem('gas_app_url') || '');
   const [loggedStatus, setLoggedStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -34,7 +36,14 @@ const App: React.FC = () => {
     setLoggedStatus('idle');
   };
 
-  const handleSubmit = async () => {
+  // Step 1: User clicks "Start" -> Show Payment Modal
+  const handleFormSubmit = () => {
+    setIsPaymentOpen(true);
+  };
+
+  // Step 2: Payment Success -> Actually Call API
+  const handlePaymentSuccess = async () => {
+    setIsPaymentOpen(false); // Close modal
     setLoading(true);
     setLoggedStatus('idle');
 
@@ -47,9 +56,7 @@ const App: React.FC = () => {
             timestamp: new Date().toISOString(),
             userName: userData.userName,
             birthDate: `${userData.birthDate} ${userData.birthHour}`,
-            scope: userData.scope,
-            targetDate: userData.targetDate,
-            categories: userData.categories,
+            request: userData.request,
             resultSummary: fortune.summary
         };
         const success = await logToGoogleSheet(gasUrl, payload);
@@ -78,7 +85,7 @@ const App: React.FC = () => {
           <div className="text-purple-900">
             <Icons.Sparkles />
           </div>
-          <h1 className="text-3xl font-bold text-purple-900 tracking-wider brush-font">天机神算</h1>
+          <h1 className="text-3xl font-bold text-purple-900 tracking-wider brush-font">天机神算 · 择日</h1>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
@@ -98,13 +105,13 @@ const App: React.FC = () => {
             {!result ? (
               <div className="animate-fade-in">
                 <div className="mb-10 text-center space-y-2">
-                  <h2 className="text-2xl font-bold text-purple-900">请施主赐教八字</h2>
+                  <h2 className="text-2xl font-bold text-purple-900">请施主赐教八字与祈愿</h2>
                   <div className="w-16 h-1 bg-purple-900 mx-auto rounded-full opacity-20"></div>
                 </div>
                 <FortuneForm 
                   userData={userData} 
                   setUserData={setUserData} 
-                  onSubmit={handleSubmit}
+                  onSubmit={handleFormSubmit}
                   isLoading={loading}
                 />
               </div>
@@ -123,11 +130,19 @@ const App: React.FC = () => {
         <p>Lunar AI Oracle • React • Google Apps Script</p>
       </footer>
 
+      {/* Modals */}
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)}
         gasUrl={gasUrl}
         onSave={handleSettingsSave}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+        amount={1.00}
       />
     </div>
   );

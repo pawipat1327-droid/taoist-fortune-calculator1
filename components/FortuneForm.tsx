@@ -1,5 +1,5 @@
 import React from 'react';
-import { FortuneCategory, UserData, PredictionScope, CHINESE_HOURS } from '../types';
+import { UserData, CHINESE_HOURS } from '../types';
 
 interface FortuneFormProps {
   userData: UserData;
@@ -10,16 +10,7 @@ interface FortuneFormProps {
 
 const FortuneForm: React.FC<FortuneFormProps> = ({ userData, setUserData, onSubmit, isLoading }) => {
   
-  const handleCategoryToggle = (category: FortuneCategory) => {
-    setUserData(prev => {
-      if (prev.categories.includes(category)) {
-        return { ...prev, categories: prev.categories.filter(c => c !== category) };
-      }
-      return { ...prev, categories: [...prev.categories, category] };
-    });
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setUserData(prev => ({ ...prev, [name]: value }));
   };
@@ -37,65 +28,24 @@ const FortuneForm: React.FC<FortuneFormProps> = ({ userData, setUserData, onSubm
       alert("请选择您的出生时辰。若不清楚，可选子时或大致时间。");
       return;
     }
-    if (userData.categories.length === 0) {
-      alert("请至少选择一项您欲测之事（如财运、事业）。");
+    if (!userData.request.trim()) {
+      alert("请描述您欲择吉日办理的事务（如：搬家、领证、开业）。");
       return;
     }
     onSubmit();
   };
 
-  // Helper to render the correct date input based on Scope
-  const renderDateInput = () => {
-    if (userData.scope === PredictionScope.YEAR) {
-      // Just a simple year selector
-      const currentYear = new Date().getFullYear();
-      const years = Array.from({length: 5}, (_, i) => currentYear + i);
-      return (
-         <select
-            name="targetDate"
-            value={userData.targetDate.split('-')[0]} // Hacky way to store year in date string
-            onChange={(e) => setUserData(prev => ({ ...prev, targetDate: `${e.target.value}-01-01` }))}
-            className="w-full bg-white border-2 border-purple-900/30 text-purple-900 rounded p-3 focus:outline-none focus:border-purple-800"
-         >
-           {years.map(y => <option key={y} value={y}>{y}年 (流年)</option>)}
-         </select>
-      );
-    }
-    
-    // For Day and Month, we use Date picker for simplicity, 
-    // Logic handles extracting Month/Day in backend
-    return (
-      <input
-        type="date"
-        name="targetDate"
-        value={userData.targetDate}
-        onChange={handleChange}
-        className="w-full bg-white border-2 border-purple-900/30 text-purple-900 rounded p-3 focus:outline-none focus:border-purple-800"
-      />
-    );
-  };
-
-  // We remove the strict 'isValid' check for the disabled state to allow user to click and get feedback
-  const isValid = userData.userName && userData.birthDate && userData.birthHour && userData.categories.length > 0;
+  const isValid = userData.userName && userData.birthDate && userData.birthHour && userData.request;
 
   return (
     <div className="space-y-8 px-2">
       
-      {/* Scope Selection - Top Tabs */}
-      <div className="flex justify-center space-x-4 border-b-2 border-purple-100 pb-4">
-        {Object.values(PredictionScope).map(scope => (
-          <button
-            key={scope}
-            onClick={() => setUserData(prev => ({ ...prev, scope: scope }))}
-            className={`text-lg font-bold pb-1 transition-all ${
-              userData.scope === scope 
-                ? 'text-purple-800 border-b-4 border-purple-800 scale-110' 
-                : 'text-purple-300 hover:text-purple-500'
-            }`}
-          >
-            {scope}
-          </button>
-        ))}
+      <div className="text-center pb-4 border-b-2 border-purple-100">
+        <h3 className="text-xl font-serif text-purple-800 font-bold">择日 · 趋吉避凶</h3>
+        <p className="text-sm text-purple-600 mt-2">
+          我们将为您精选 <span className="font-bold text-red-700">5</span> 个黄道吉日<br/>
+          (涵盖近期急用与从容筹备之时机)
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,7 +74,7 @@ const FortuneForm: React.FC<FortuneFormProps> = ({ userData, setUserData, onSubm
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2">
           <label className="block text-purple-900 font-serif font-bold">出生时辰 (Hour)</label>
           <select
             name="birthHour"
@@ -138,34 +88,21 @@ const FortuneForm: React.FC<FortuneFormProps> = ({ userData, setUserData, onSubm
             ))}
           </select>
         </div>
-
-        <div className="space-y-2">
-           <label className="block text-purple-900 font-serif font-bold">
-             {userData.scope === PredictionScope.YEAR ? '欲测何年 (Year)' : '欲测何日 (Target)'}
-           </label>
-           {renderDateInput()}
-        </div>
       </div>
 
       <div className="space-y-3">
-        <label className="block text-purple-900 font-serif font-bold text-center">所求何事 (Categories)</label>
-        <div className="flex flex-wrap justify-center gap-3">
-          {Object.values(FortuneCategory).map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => handleCategoryToggle(cat)}
-              className={`px-6 py-2 rounded-none border-2 text-lg font-serif transition-all transform ${
-                userData.categories.includes(cat)
-                  ? 'bg-purple-900 text-white border-purple-900 rotate-1'
-                  : 'bg-transparent text-purple-900 border-purple-300 hover:border-purple-600'
-              }`}
-              style={{ clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0% 100%)' }} // Parallelogram shape
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <label className="block text-purple-900 font-serif font-bold">
+           欲办何事 (What is your plan?)
+        </label>
+        <textarea
+           name="request"
+           value={userData.request}
+           onChange={handleChange}
+           rows={3}
+           className="w-full bg-white border-2 border-purple-900/30 text-purple-900 rounded p-4 focus:outline-none focus:border-purple-800 placeholder-purple-300 resize-none text-lg"
+           placeholder="例如：准备在下个月搬家入宅；或者计划在今年内和女友领证结婚；或者打算近期开一家咖啡店..."
+        />
+        <p className="text-xs text-purple-500/80 text-right">越详细，择日依据越精准</p>
       </div>
 
       <div className="pt-6 flex justify-center">
@@ -177,18 +114,18 @@ const FortuneForm: React.FC<FortuneFormProps> = ({ userData, setUserData, onSubm
               ? 'bg-purple-900/70 cursor-wait'
               : isValid 
                 ? 'bg-purple-900 hover:bg-purple-800 hover:scale-105 active:scale-95 shadow-xl' 
-                : 'bg-gray-500 hover:bg-gray-600 shadow-md' // Visually distinct but still clickable for feedback
+                : 'bg-gray-500 hover:bg-gray-600 shadow-md'
           }`}
           style={{ 
-            clipPath: 'polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%)' // Octagon-ish
+            clipPath: 'polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%)' 
           }}
         >
           {isLoading ? (
              <span className="flex items-center gap-2">
-               <span className="animate-spin text-2xl">☯</span> 掐指运算...
+               <span className="animate-spin text-2xl">☯</span> 演卦择吉...
              </span>
           ) : (
-            '起 卦'
+            '寻 龙 择 日'
           )}
         </button>
       </div>
