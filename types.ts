@@ -6,11 +6,11 @@ export const CHINESE_HOURS = [
 ];
 
 export const DATE_RANGE_OPTIONS = [
-  { label: '7日内', value: '7d', days: 7 },
-  { label: '1个月内', value: '1m', days: 30 },
-  { label: '3个月内', value: '3m', days: 90 },
-  { label: '半年内', value: '6m', days: 180 },
-  { label: '1年内', value: '1y', days: 365 },
+  { label: '未来一周', value: '7d', days: 7 },
+  { label: '未来一个月', value: '1m', days: 30 },
+  { label: '未来三个月', value: '3m', days: 90 },
+  { label: '未来半年', value: '6m', days: 180 },
+  { label: '未来一年', value: '1y', days: 365 },
 ];
 
 export interface UserData {

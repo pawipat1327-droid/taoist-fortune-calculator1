@@ -11,6 +11,7 @@ const DatePage: React.FC = () => {
     birthDate: '',
     birthHour: '',
     request: '',
+    dateRange: '1m', // 默认选中"未来一个月"
   });
 
   const [result, setResult] = useState<FortuneResult | null>(null);
@@ -22,6 +23,13 @@ const DatePage: React.FC = () => {
   const handleReset = () => {
     setResult(null);
     setLoggedStatus('idle');
+    setUserData({
+      userName: '',
+      birthDate: '',
+      birthHour: '',
+      request: '',
+      dateRange: '1m', // 重置为默认值
+    });
   };
 
   const handleFormSubmit = async () => {
