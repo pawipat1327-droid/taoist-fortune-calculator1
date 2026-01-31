@@ -8,8 +8,23 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api/deepseek': {
+            target: 'https://api.deepseek.com',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/deepseek/, ''),
+            configure: (proxy, options) => {
+              proxy.on('proxyReq', (proxyReq, req, res) => {
+                proxyReq.setHeader('Authorization', 'Bearer sk-fe74936882674bf5ab67e874d06628ec');
+              });
+            },
+          }
+        }
       },
       plugins: [react()],
+      css: {
+        postcss: './postcss.config.js',
+      },
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
