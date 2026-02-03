@@ -99,6 +99,7 @@ const DatePage: React.FC = () => {
             <div className="animate-fade-in">
               <FortuneResultView
                 result={result}
+                userData={userData}
                 onReset={handleReset}
                 loggedStatus={loggedStatus}
               />
