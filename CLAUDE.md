@@ -1,102 +1,84 @@
-# CLAUDE.md
+# CLAUDE.md - 项目核心规则与记忆
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 0. ⚠️ 核心行为准则 (CRITICAL INSTRUCTIONS)
+> 这些是最高优先级的交互规则，必须严格遵守。
 
-## Development Commands
+- **NO YAPPING (拒绝废话)**: 除非我明确询问原理，否则**绝对不要**解释代码、不要说客套话、不要总结。直接给出代码或执行结果。
+- **TOKEN SAVING (节省 Token)**: 修改代码时，**仅输出**修改的函数或代码块 (Diffs)，**严禁**输出整个未变动的文件内容。
+- **LANGUAGE**: 思考和代码注释用英文（更省 Token），但与我对话（解释问题时）用中文。
+- **FILE CREATION**: 创建新文件时，必须输出完整代码。
 
+## 1. 角色与风格 (Role & Vibe)
+- **Role**: 精通 React、Tailwind CSS 和中国传统命理算法（iztro/lunar-javascript）的全栈 Vibe Coder。
+- **Design Vibe**: "新中式赛博朋克" (Neo-Chinese Cyberpunk)。
+  - 配色：深色背景 (bg-slate-900)、金色高亮 (text-amber-500/gold)、朱砂红点缀 (text-red-600)。
+  - 质感：磨砂玻璃 (Backdrop blur)、微发光 (Glow effects)、圆角卡片。
+  - 布局：移动端优先 (Mobile First)，注重呼吸感和留白。
+
+## 2. 开发命令 (Development Commands)
 ### Setup
 1. Install dependencies: `npm install`
-2. Set environment variables: Copy `.env.example` (if exists) or create `.env.local` with your API keys:
-   - `VITE_DEEPSEEK_API_KEY`: Your DeepSeek API key for fortune generation
+2. Environment: Create `.env.local` with `VITE_DEEPSEEK_API_KEY`.
 
-### Running the App
-- **Development**: `npm run dev` - Starts development server at http://localhost:3000
-- **Build**: `npm run build` - Creates production build in `dist/`
-- **Preview**: `npm run preview` - Previews production build
+### Running
+- **Dev**: `npm run dev` (http://localhost:3000)
+- **Build**: `npm run build`
+- **Deploy**: `npm run build && firebase deploy` (Firebase Hosting)
 
-### Testing
-- Manual test scripts available in project root:
-  - `test_api.mjs` - Tests API connection
-  - `test_deepseek.mjs` - Tests DeepSeek service
+### Docker
+- Build: `docker build -t taoist-fortune-calculator .`
+- Run: `docker run -p 8080:8080 taoist-fortune-calculator`
 
-### Docker Deployment
-- Build and run with: `docker build -t taoist-fortune-calculator .`
-- Run container: `docker run -p 8080:8080 taoist-fortune-calculator`
+## 3. 项目架构 (Project Architecture)
 
-## Project Architecture
-
-### Tech Stack
-- **Framework**: React 19.2.3 with TypeScript
-- **Build Tool**: Vite 6.2.0
-- **Core Dependencies**:
-  - `lunar-javascript` - Chinese lunar calendar and BaZi calculations
-  - `html2canvas` - Screenshot generation for sharing
-  - `qrcode.react` - QR code generation for social sharing
-  - `@types/qrcode.react` - TypeScript definitions
+### Tech Stack (Updated)
+- **Framework**: React 19.2.3 + TypeScript + Vite 6.2.0
+- **Routing**: `react-router-dom` (SPA架构)
+- **UI**: Tailwind CSS
+- **Core Algorithms (核心算法库)**:
+  - `iztro`: **紫微斗数排盘核心** (用于 /love 板块)。
+  - `lunar-javascript`: **农历/八字/奇门计算** (用于 /date 和 /money 板块)。
+- **Utilities**:
+  - `html2canvas`: 生成分享图。
+  - `qrcode.react`: 生成二维码。
 
 ### Directory Structure
-```
+```  
 ├── components/          # React components
-│   ├── FortuneForm.tsx      # User input form
-│   ├── FortuneResultView.tsx # Display results
-│   ├── RitualLoader.tsx     # Loading animation
-│   ├── SettingsModal.tsx    # Settings/config
-│   ├── SharePreviewModal.tsx # Social sharing
-│   └── SpiritLot.tsx        # Main fortune calculation
-├── services/           # Business logic
-│   ├── deepseekService.ts   # AI API integration
-│   └── loggingService.ts   # Google Sheets logging
-├── utils/              # Utility functions
-│   ├── icsHelper.ts        # Calendar file generation
-│   └── lunarHelper.ts       # Lunar calendar helpers
-├── App.tsx             # Main application component
-├── constants.ts        # App constants and icons
-├── types.ts            # TypeScript type definitions
-└── index.html          # HTML entry point
-```
+│   ├── layout/              # New: Layout wrapper (Navbar, Footer)
+│   ├── home/                # New: Home page components
+│   ├── shared/              # New: Reusable UI (Buttons, Cards, Loader)
+│   ├── FortuneForm.tsx      # Legacy form (migrate to /date)
+│   └── SpiritLot.tsx        # Legacy logic
+├── pages/               # Page Views (Route destinations)
+│   ├── Home.jsx             # 首页 (4大板块入口)
+│   ├── DateSelection.jsx    # 查吉日
+│   ├── LoveAnalysis.jsx     # 测姻缘 (紫微)
+│   ├── WealthForecast.jsx   # 算财运 (奇门)
+│   └── DreamDecoder.jsx     # 解梦
+├── services/           
+│   ├── deepseekService.ts   # AI API (Prompt Engineering Center)
+│   └── loggingService.ts   
+├── utils/              
+│   ├── lunarHelper.ts       
+│   └── iztroHelper.ts       # New: Zi Wei Dou Shu helpers
+├── App.tsx             # Main Router config
+└── index.html          
+```  
 
-### Key Architecture Patterns
+## 4. 业务逻辑规范 (Business Logic)
 
-#### State Management
-- App state handled through React useState hooks
-- Loading states managed with finite state machine:
-  ```typescript
-  type LoadingStatus = 'idle' | 'loading' | 'finishing'
-  ```
+### Fortune Flow (通用流程)
+1. **Local Calculation**: 先调用 `iztro` 或 `lunar-javascript` 在本地算出精准的命盘/局象数据 (JSON)。
+2. **AI Interpretation**: 将 JSON 数据 + System Prompt 发送给 DeepSeek。
+3. **Response**: DeepSeek 只负责解释数据，不负责计算数据。
 
-#### Fortune Generation Flow
-1. User submits form with personal data (name, birth date/time, request)
-2. `lunar-javascript` calculates BaZi (8 characters) and lunar calendar data
-3. Data formatted and sent to DeepSeek API via `deepseekService.ts`
-4. AI generates fortune analysis and recommended dates
-5. Results displayed with animated transition
-6. Optional: Log to Google Sheets via `loggingService.ts`
+### Data Models
+- **UserData**: Input (Name, Birth, Gender, Request).
+- **AstroData**: Calculated output from `iztro` (Stars, Palaces, 4-Hua).
+- **QiMenData**: Calculated output from `lunar-javascript` (Doors, Stars, Gods).
 
-#### Data Models
-- `UserData`: User input data
-- `LunarAnalysisData`: Calculated BaZi and lunar calendar data
-- `FortuneResult`: AI-generated fortune analysis
-- `RecommendedDate`: Specific date recommendations with Taoist details
-
-#### Configuration
-- Environment variables loaded via Vite's `loadEnv`
-- DeepSeek API key used for AI fortune generation
-- Google Apps Script URL stored in localStorage for analytics
-
-### Component Responsibilities
-- **FortuneForm**: Collects user input, validates, triggers calculation
-- **FortuneResultView**: Displays formatted results, handles sharing
-- **SpiritLot**: Main calculation engine, coordinates services
-- **RitualLoader**: Handles loading states with themed animations
-- **SettingsModal**: Configuration for Google Sheets integration
-
-### External Integrations
-- **DeepSeek AI**: Primary API for fortune generation
-- **Google Sheets**: Analytics logging (via Apps Script)
-- **Google Calendar**: ICS file generation for recommended dates
-
-### Development Notes
-- Uses Vite path aliases: `@` resolves to project root
-- TypeScript strict mode enabled
-- Firebase configuration available for potential deployment
-- Components styled with Tailwind CSS (standard React approach)
+## 5. 编码习惯 (Coding Standards)
+- **Style**: 组件必须使用 Tailwind CSS，禁止写行内 style。
+- **Stability**: 在修改 UI 之前，先检查是否会破坏移动端布局。
+- **Refactor**: 遇到长文件（超过 200 行），主动建议拆分为小组件。
